@@ -1,0 +1,71 @@
+@use '@/styles/variables.scss' as *;
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+
+  &.pending {
+    background: #FFF7E6;
+    color: $color-warning;
+  }
+
+  &.confirmed {
+    background: #E8F5E9;
+    color: $color-success;
+  }
+
+  &.completed {
+    background: #E3F2FD;
+    color: $color-info;
+  }
+
+  &.cancelled {
+    background: #FFEBEE;
+    color: $color-error;
+  }
+
+  &.waiting {
+    background: #F3E5F5;
+    color: #7B1FA2;
+  }
+
+  &.calling {
+    background: #FFF3E0;
+    color: #E65100;
+  }
+
+  &.processing {
+    background: #E8F5E9;
+    color: $color-success;
+  }
+
+  &.skipped {
+    background: #FFF8E1;
+    color: #F57F17;
+  }
+
+  &.left {
+    background: #ECEFF1;
+    color: #546E7A;
+  }
+
+  &.available {
+    background: #E8F5E9;
+    color: $color-success;
+  }
+
+  &.booked {
+    background: #FFEBEE;
+    color: $color-error;
+  }
+
+  &.conflict {
+    background: #FFEBEE;
+    color: $color-error;
+  }
+}

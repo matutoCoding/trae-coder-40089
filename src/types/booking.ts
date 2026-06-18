@@ -54,4 +54,5 @@ export interface ConflictInfo {
   conflictType: 'Overlap' | 'IntervalViolation' | 'CapacityExceeded';
   description: string;
   resolved: boolean;
+  affectedBookings?: string[];
 }

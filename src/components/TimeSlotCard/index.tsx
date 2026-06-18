@@ -26,7 +26,7 @@ const TimeSlotCard: React.FC<TimeSlotCardProps> = ({ slot, selected, onClick }) 
         slot.status === 'Conflict' && styles.conflict,
         selected && styles.selected
       )}
-      onClick={slot.status !== 'Booked' ? onClick : undefined}
+      onClick={onClick}
     >
       <Text className={styles.timeRange}>
         {slot.startTime} - {slot.endTime}

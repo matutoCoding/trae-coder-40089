@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, Button } from '@tarojs/components';
-import Taro from '@tarojs/taro';
+import Taro, { useDidShow } from '@tarojs/taro';
 import styles from './index.module.scss';
 import classnames from 'classnames';
 import { useBookingStore } from '@/store/bookingStore';
@@ -8,14 +8,15 @@ import StatusBadge from '@/components/StatusBadge';
 import PriorityTag from '@/components/PriorityTag';
 
 const ConflictPage: React.FC = () => {
-  const { conflicts, runConflictCheck, resolveConflict, cancelBooking, bookings, timeSlots } =
+  const { conflicts, runConflictCheck, resolveConflict, cancelBooking, bookings, timeSlots, loadTimeSlots } =
     useBookingStore();
 
   const [filter, setFilter] = useState<'all' | 'unresolved' | 'resolved'>('all');
 
-  useEffect(() => {
+  useDidShow(() => {
+    loadTimeSlots();
     runConflictCheck();
-  }, []);
+  });
 
   const handleRunCheck = () => {
     const list = runConflictCheck();

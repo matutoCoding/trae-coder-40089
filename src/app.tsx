@@ -1,16 +1,16 @@
 import React, { useEffect } from 'react';
 import { useDidShow, useDidHide } from '@tarojs/taro';
-// 全局样式
 import './app.scss';
+import { useBookingStore } from '@/store/bookingStore';
 
 function App(props) {
-  // 可以使用所有的 React Hooks
-  useEffect(() => {});
+  const loadTimeSlots = useBookingStore((state) => state.loadTimeSlots);
 
-  // 对应 onShow
+  useEffect(() => {
+    loadTimeSlots();
+  }, [loadTimeSlots]);
+
   useDidShow(() => {});
-
-  // 对应 onHide
   useDidHide(() => {});
 
   return props.children;

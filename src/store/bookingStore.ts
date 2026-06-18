@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { CollectionStation, TimeSlot, Booking, ConflictInfo } from '@/types/booking';
-import { mockStations, mockBookings, generateMockTimeSlots } from '@/data/bookingData';
+import { mockStations, mockBookings, generateEmptyTimeSlots, SLOT_CAPACITY } from '@/data/bookingData';
 import { detectBookingConflicts, releaseSlotOnCancel } from '@/utils/conflictCheck';
 
 interface BookingState {
@@ -13,6 +13,7 @@ interface BookingState {
   loadTimeSlots: (date?: string) => void;
   getSlotsByStation: (stationId: string) => TimeSlot[];
   getBookingsByStation: (stationId: string, date?: string) => Booking[];
+  computeSlotsFromBookings: (date: string) => TimeSlot[];
   createBooking: (data: Omit<Booking, 'id' | 'createdAt' | 'status'>) => { success: boolean; message: string; booking?: Booking };
   cancelBooking: (bookingId: string) => boolean;
   runConflictCheck: () => ConflictInfo[];
@@ -23,18 +24,36 @@ interface BookingState {
 
 const today = new Date().toISOString().split('T')[0];
 
+const getValidBookings = (bookings: Booking[]): Booking[] => {
+  return bookings.filter((b) => b.status !== 'Cancelled');
+};
+
 export const useBookingStore = create<BookingState>((set, get) => ({
   stations: mockStations,
-  timeSlots: generateMockTimeSlots(today),
+  timeSlots: [],
   bookings: mockBookings,
   conflicts: [],
   selectedStationId: mockStations[0].id,
   selectedDate: today,
 
+  computeSlotsFromBookings: (date: string) => {
+    const { bookings } = get();
+    const validBookings = getValidBookings(bookings);
+    const emptySlots = generateEmptyTimeSlots(date);
+    return emptySlots.map((slot) => {
+      const count = validBookings.filter((b) => b.slotId === slot.id).length;
+      return {
+        ...slot,
+        bookedCount: count,
+        status: count >= slot.capacity ? 'Booked' : 'Available',
+      };
+    });
+  },
+
   loadTimeSlots: (date) => {
     const targetDate = date || get().selectedDate;
-    set({ timeSlots: generateMockTimeSlots(targetDate), selectedDate: targetDate });
-    console.log('[BookingStore] 加载时段:', targetDate, '总数:', generateMockTimeSlots(targetDate).length);
+    const computedSlots = get().computeSlotsFromBookings(targetDate);
+    set({ timeSlots: computedSlots, selectedDate: targetDate });
   },
 
   getSlotsByStation: (stationId) => {
@@ -44,57 +63,61 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   getBookingsByStation: (stationId, date) => {
     const { bookings, selectedDate } = get();
     const targetDate = date || selectedDate;
-    return bookings.filter((b) => b.stationId === stationId && b.date === targetDate && b.status !== 'Cancelled');
+    return getValidBookings(bookings).filter((b) => b.stationId === stationId && b.date === targetDate);
   },
 
   createBooking: (data) => {
     const state = get();
-    const slot = state.timeSlots.find((s) => s.id === data.slotId);
-    if (!slot) {
-      console.error('[BookingStore] 创建预约失败：时段不存在');
-      return { success: false, message: '时段不存在' };
+    const validBookings = getValidBookings(state.bookings);
+    const slotBookings = validBookings.filter((b) => b.slotId === data.slotId);
+
+    if (slotBookings.length >= SLOT_CAPACITY) {
+      return { success: false, message: '该时段已约满，请选择其他时段' };
     }
-    if (slot.status === 'Booked' || slot.bookedCount >= slot.capacity) {
-      console.error('[BookingStore] 创建预约失败：时段已满');
-      return { success: false, message: '该时段已约满' };
-    }
+
     const newBooking: Booking = {
       ...data,
       id: `b${Date.now()}`,
       status: 'Confirmed',
       createdAt: new Date().toLocaleString(),
     };
+
+    const newBookings = [...state.bookings, newBooking];
+
     set((s) => {
-      const updatedSlots = s.timeSlots.map((sl) =>
-        sl.id === slot.id ? { ...sl, bookedCount: sl.bookedCount + 1, status: sl.bookedCount + 1 >= sl.capacity ? 'Booked' : 'Available' } : sl
-      );
-      return { bookings: [...s.bookings, newBooking], timeSlots: updatedSlots };
+      const updatedSlots = s.timeSlots.map((sl) => {
+        if (sl.id === data.slotId) {
+          const newCount = sl.bookedCount + 1;
+          return { ...sl, bookedCount: newCount, status: newCount >= sl.capacity ? 'Booked' : 'Available' };
+        }
+        return sl;
+      });
+      return { bookings: newBookings, timeSlots: updatedSlots };
     });
-    console.log('[BookingStore] 预约创建成功:', newBooking.id, newBooking.donorName);
+
     return { success: true, message: '预约成功', booking: newBooking };
   },
 
   cancelBooking: (bookingId) => {
     const state = get();
     const booking = state.bookings.find((b) => b.id === bookingId);
-    if (!booking) {
-      console.error('[BookingStore] 取消预约失败：预约不存在', bookingId);
-      return false;
-    }
+    if (!booking) return false;
+
+    const updatedBookings = state.bookings.map((b) =>
+      b.id === bookingId ? { ...b, status: 'Cancelled' } : b
+    );
+
     set((s) => {
-      const updatedBookings = s.bookings.map((b) =>
-        b.id === bookingId ? { ...b, status: 'Cancelled' } : b
-      );
-      const targetSlot = s.timeSlots.find((sl) => sl.id === booking.slotId);
-      let updatedSlots = s.timeSlots;
-      if (targetSlot) {
-        updatedSlots = s.timeSlots.map((sl) =>
-          sl.id === targetSlot.id ? releaseSlotOnCancel(sl, updatedBookings) : sl
-        );
-      }
+      const updatedSlots = s.timeSlots.map((sl) => {
+        if (sl.id === booking.slotId) {
+          const remainingCount = getValidBookings(updatedBookings).filter((b) => b.slotId === sl.id).length;
+          return { ...sl, bookedCount: remainingCount, status: remainingCount >= sl.capacity ? 'Booked' : 'Available' };
+        }
+        return sl;
+      });
       return { bookings: updatedBookings, timeSlots: updatedSlots };
     });
-    console.log('[BookingStore] 预约已取消:', bookingId, '时段已释放');
+
     return true;
   },
 
@@ -102,7 +125,6 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     const { bookings, timeSlots } = get();
     const conflicts = detectBookingConflicts(bookings, timeSlots);
     set({ conflicts });
-    console.log('[BookingStore] 冲突检测完成，发现冲突数:', conflicts.length);
     return conflicts;
   },
 
@@ -110,7 +132,6 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     set((s) => ({
       conflicts: s.conflicts.map((c) => (c.id === conflictId ? { ...c, resolved: true } : c)),
     }));
-    console.log('[BookingStore] 冲突已标记为已解决:', conflictId);
   },
 
   selectStation: (id) => {

@@ -35,33 +35,37 @@ export const mockStations: CollectionStation[] = [
   },
 ];
 
-const generateTimeSlots = (stationId: string, date: string): TimeSlot[] => {
+export const SLOT_CAPACITY = 5;
+
+export const TIME_PERIODS = [
+  { start: '08:00', end: '08:30' },
+  { start: '08:30', end: '09:00' },
+  { start: '09:00', end: '09:30' },
+  { start: '09:30', end: '10:00' },
+  { start: '10:00', end: '10:30' },
+  { start: '10:30', end: '11:00' },
+  { start: '11:00', end: '11:30' },
+  { start: '14:00', end: '14:30' },
+  { start: '14:30', end: '15:00' },
+  { start: '15:00', end: '15:30' },
+  { start: '15:30', end: '16:00' },
+  { start: '16:00', end: '16:30' },
+];
+
+export const generateEmptyTimeSlots = (date: string): TimeSlot[] => {
   const slots: TimeSlot[] = [];
-  const periods = [
-    { start: '08:00', end: '08:30' },
-    { start: '08:30', end: '09:00' },
-    { start: '09:00', end: '09:30' },
-    { start: '09:30', end: '10:00' },
-    { start: '10:00', end: '10:30' },
-    { start: '10:30', end: '11:00' },
-    { start: '11:00', end: '11:30' },
-    { start: '14:00', end: '14:30' },
-    { start: '14:30', end: '15:00' },
-    { start: '15:00', end: '15:30' },
-    { start: '15:30', end: '16:00' },
-    { start: '16:00', end: '16:30' },
-  ];
-  periods.forEach((p, idx) => {
-    const bookedCount = Math.floor(Math.random() * 6);
-    slots.push({
-      id: `${stationId}-${date}-${idx}`,
-      stationId,
-      date,
-      startTime: p.start,
-      endTime: p.end,
-      status: bookedCount >= 5 ? 'Booked' : 'Available',
-      capacity: 5,
-      bookedCount,
+  mockStations.forEach((station) => {
+    TIME_PERIODS.forEach((period, idx) => {
+      slots.push({
+        id: `${station.id}-${date}-${idx}`,
+        stationId: station.id,
+        date,
+        startTime: period.start,
+        endTime: period.end,
+        status: 'Available',
+        capacity: SLOT_CAPACITY,
+        bookedCount: 0,
+      });
     });
   });
   return slots;
@@ -69,15 +73,6 @@ const generateTimeSlots = (stationId: string, date: string): TimeSlot[] => {
 
 const today = new Date().toISOString().split('T')[0];
 const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-
-export const generateMockTimeSlots = (date?: string): TimeSlot[] => {
-  const targetDate = date || today;
-  let all: TimeSlot[] = [];
-  mockStations.forEach((s) => {
-    all = all.concat(generateTimeSlots(s.id, targetDate));
-  });
-  return all;
-};
 
 export const mockBookings: Booking[] = [
   {
@@ -169,5 +164,65 @@ export const mockBookings: Booking[] = [
     bloodType: 'A',
     status: 'Confirmed',
     createdAt: '2026-06-17 14:20',
+  },
+  {
+    id: 'b007',
+    donorId: 'd006',
+    donorName: '陈静',
+    stationId: 's001',
+    stationName: '流动采血车1号',
+    slotId: 's001-2026-06-18-2',
+    date: today,
+    startTime: '09:00',
+    endTime: '09:30',
+    priority: 'Rare',
+    bloodType: 'O-',
+    status: 'Confirmed',
+    createdAt: '2026-06-17 09:15',
+  },
+  {
+    id: 'b008',
+    donorId: 'd007',
+    donorName: '杨帆',
+    stationId: 's001',
+    stationName: '流动采血车1号',
+    slotId: 's001-2026-06-18-2',
+    date: today,
+    startTime: '09:00',
+    endTime: '09:30',
+    priority: 'VIP',
+    bloodType: 'B',
+    status: 'Confirmed',
+    createdAt: '2026-06-16 16:40',
+  },
+  {
+    id: 'b009',
+    donorId: 'd008',
+    donorName: '黄磊',
+    stationId: 's001',
+    stationName: '流动采血车1号',
+    slotId: 's001-2026-06-18-2',
+    date: today,
+    startTime: '09:00',
+    endTime: '09:30',
+    priority: 'Normal',
+    bloodType: 'AB',
+    status: 'Confirmed',
+    createdAt: '2026-06-17 13:20',
+  },
+  {
+    id: 'b010',
+    donorId: 'd009',
+    donorName: '周婷',
+    stationId: 's001',
+    stationName: '流动采血车1号',
+    slotId: 's001-2026-06-18-3',
+    date: today,
+    startTime: '09:30',
+    endTime: '10:00',
+    priority: 'Normal',
+    bloodType: 'A',
+    status: 'Confirmed',
+    createdAt: '2026-06-17 10:50',
   },
 ];

@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import type { Booking, TimeSlot, ConflictInfo } from '@/types/booking';
+import { SLOT_CAPACITY } from '@/data/bookingData';
 
 export const checkTimeOverlap = (
   slot1: { startTime: string; endTime: string },
@@ -35,44 +36,53 @@ export const checkDonationInterval = (
   };
 };
 
+const getActiveBookings = (bookings: Booking[]): Booking[] => {
+  return bookings.filter((b) => b.status !== 'Cancelled');
+};
+
 export const detectBookingConflicts = (
   bookings: Booking[],
   timeSlots: TimeSlot[]
 ): ConflictInfo[] => {
   const conflicts: ConflictInfo[] = [];
+  const activeBookings = getActiveBookings(bookings);
+  const capacity = SLOT_CAPACITY;
 
-  bookings.forEach((booking) => {
-    if (booking.status === 'Cancelled') return;
-
-    timeSlots.forEach((slot) => {
-      if (
-        booking.stationId === slot.stationId &&
-        booking.slotId === slot.id &&
-        slot.bookedCount > slot.capacity
-      ) {
-        conflicts.push({
-          id: `cap-${booking.id}`,
-          bookingId: booking.id,
-          donorName: booking.donorName,
-          stationId: booking.stationId,
-          stationName: booking.stationName,
-          slotId: slot.id,
-          date: booking.date,
-          startTime: booking.startTime,
-          endTime: booking.endTime,
-          conflictType: 'CapacityExceeded',
-          description: `该时段预约人数${slot.bookedCount}超过容量${slot.capacity}`,
-          resolved: false,
-        });
-      }
-    });
+  const slotGroupMap = new Map<string, Booking[]>();
+  activeBookings.forEach((booking) => {
+    const key = booking.slotId;
+    if (!slotGroupMap.has(key)) {
+      slotGroupMap.set(key, []);
+    }
+    slotGroupMap.get(key)!.push(booking);
   });
 
-  for (let i = 0; i < bookings.length; i++) {
-    for (let j = i + 1; j < bookings.length; j++) {
-      const a = bookings[i];
-      const b = bookings[j];
-      if (a.status === 'Cancelled' || b.status === 'Cancelled') continue;
+  slotGroupMap.forEach((slotBookings, slotId) => {
+    if (slotBookings.length >= capacity) {
+      const first = slotBookings[0];
+      const donorNames = slotBookings.map((b) => b.donorName).join('、');
+      conflicts.push({
+        id: `cap-${slotId}`,
+        bookingId: first.id,
+        donorName: first.donorName,
+        stationId: first.stationId,
+        stationName: first.stationName,
+        slotId: slotId,
+        date: first.date,
+        startTime: first.startTime,
+        endTime: first.endTime,
+        conflictType: 'CapacityExceeded',
+        description: `该时段共${slotBookings.length}人预约，超出容量${capacity}人（涉及：${donorNames}）`,
+        resolved: false,
+        affectedBookings: slotBookings.map((b) => b.id),
+      });
+    }
+  });
+
+  for (let i = 0; i < activeBookings.length; i++) {
+    for (let j = i + 1; j < activeBookings.length; j++) {
+      const a = activeBookings[i];
+      const b = activeBookings[j];
       if (a.donorId === b.donorId && a.date === b.date) {
         if (
           checkTimeOverlap(
@@ -93,6 +103,7 @@ export const detectBookingConflicts = (
             conflictType: 'Overlap',
             description: `同一献血者${a.donorName}在${a.date}存在时段重叠预约`,
             resolved: false,
+            affectedBookings: [a.id, b.id],
           });
         }
       }

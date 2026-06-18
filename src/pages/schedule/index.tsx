@@ -21,6 +21,7 @@ const SchedulePage: React.FC = () => {
     createBooking,
     cancelBooking,
     bookings,
+    loadTimeSlots,
   } = useBookingStore();
 
   const { getCurrentDonor, checkDonorInterval } = useDonorStore();
@@ -30,7 +31,7 @@ const SchedulePage: React.FC = () => {
   const intervalCheck = currentDonor ? checkDonorInterval(currentDonor.id, selectedDate) : { valid: true, daysLeft: 0, description: '' };
 
   useDidShow(() => {
-    console.log('[SchedulePage] 页面显示，当前献血者:', currentDonor?.name);
+    loadTimeSlots();
   });
 
   const handleDateChange = (direction: number) => {
@@ -161,7 +162,16 @@ const SchedulePage: React.FC = () => {
                         key={slot.id}
                         slot={slot}
                         selected={selectedSlotId === slot.id}
-                        onClick={() => setSelectedSlotId(slot.id)}
+                        onClick={() => {
+                          if (slot.status === 'Booked') {
+                            Taro.showToast({
+                              title: '该时段已约满，存在容量冲突',
+                              icon: 'none',
+                            });
+                            return;
+                          }
+                          setSelectedSlotId(slot.id);
+                        }}
                       />
                     ))}
                   </View>

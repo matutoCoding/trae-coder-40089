@@ -48,33 +48,33 @@ export const detectBookingConflicts = (
   const activeBookings = getActiveBookings(bookings);
   const CONFLICT_THRESHOLD = 2;
 
-  const slotGroupMap = new Map<string, Booking[]>();
+  const timeGroupMap = new Map<string, Booking[]>();
   activeBookings.forEach((booking) => {
-    const key = booking.slotId;
-    if (!slotGroupMap.has(key)) {
-      slotGroupMap.set(key, []);
+    const key = `${booking.stationId}|${booking.date}|${booking.startTime}|${booking.endTime}`;
+    if (!timeGroupMap.has(key)) {
+      timeGroupMap.set(key, []);
     }
-    slotGroupMap.get(key)!.push(booking);
+    timeGroupMap.get(key)!.push(booking);
   });
 
-  slotGroupMap.forEach((slotBookings, slotId) => {
-    if (slotBookings.length >= CONFLICT_THRESHOLD) {
-      const first = slotBookings[0];
-      const donorNames = slotBookings.map((b) => b.donorName).join('、');
+  timeGroupMap.forEach((groupBookings, key) => {
+    if (groupBookings.length >= CONFLICT_THRESHOLD) {
+      const first = groupBookings[0];
+      const donorNames = groupBookings.map((b) => b.donorName).join('、');
       conflicts.push({
-        id: `dup-${slotId}`,
+        id: `dup-${key}`,
         bookingId: first.id,
         donorName: first.donorName,
         stationId: first.stationId,
         stationName: first.stationName,
-        slotId: slotId,
+        slotId: first.slotId,
         date: first.date,
         startTime: first.startTime,
         endTime: first.endTime,
         conflictType: 'CapacityExceeded',
-        description: `该时段重复占用：共${slotBookings.length}人预约（${donorNames}），同一时段仅允许1人`,
+        description: `该时段重复占用：共${groupBookings.length}人预约（${donorNames}），同一时段仅允许1人`,
         resolved: false,
-        affectedBookings: slotBookings.map((b) => b.id),
+        affectedBookings: groupBookings.map((b) => b.id),
       });
     }
   });

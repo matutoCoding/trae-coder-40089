@@ -41,7 +41,13 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     const validBookings = getValidBookings(source);
     const emptySlots = generateEmptyTimeSlots(date);
     return emptySlots.map((slot) => {
-      const count = validBookings.filter((b) => b.slotId === slot.id).length;
+      const count = validBookings.filter(
+        (b) =>
+          b.stationId === slot.stationId &&
+          b.date === slot.date &&
+          b.startTime === slot.startTime &&
+          b.endTime === slot.endTime
+      ).length;
       return {
         ...slot,
         bookedCount: count,
@@ -69,7 +75,13 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   createBooking: (data) => {
     const state = get();
     const validBookings = getValidBookings(state.bookings);
-    const slotBookings = validBookings.filter((b) => b.slotId === data.slotId);
+    const slotBookings = validBookings.filter(
+      (b) =>
+        b.stationId === data.stationId &&
+        b.date === data.date &&
+        b.startTime === data.startTime &&
+        b.endTime === data.endTime
+    );
 
     if (slotBookings.length >= SLOT_CAPACITY) {
       return { success: false, message: '该时段已约满，请选择其他时段' };

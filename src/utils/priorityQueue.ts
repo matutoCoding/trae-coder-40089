@@ -1,4 +1,5 @@
-import type { QueueItem, DonorPriority } from '@/types/queue';
+import type { QueueItem } from '@/types/queue';
+import type { DonorPriority } from '@/types/donor';
 import { PRIORITY_LEVEL } from '@/types/donor';
 
 export const sortQueueByPriority = (queue: QueueItem[]): QueueItem[] => {

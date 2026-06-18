@@ -35,6 +35,7 @@ const ConflictPage: React.FC = () => {
       success: (res) => {
         if (res.confirm) {
           cancelBooking(bookingId);
+          loadTimeSlots();
           runConflictCheck();
           Taro.showToast({ title: '已取消预约', icon: 'success' });
         }

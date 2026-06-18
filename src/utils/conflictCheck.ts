@@ -46,7 +46,7 @@ export const detectBookingConflicts = (
 ): ConflictInfo[] => {
   const conflicts: ConflictInfo[] = [];
   const activeBookings = getActiveBookings(bookings);
-  const capacity = SLOT_CAPACITY;
+  const CONFLICT_THRESHOLD = 2;
 
   const slotGroupMap = new Map<string, Booking[]>();
   activeBookings.forEach((booking) => {
@@ -58,11 +58,11 @@ export const detectBookingConflicts = (
   });
 
   slotGroupMap.forEach((slotBookings, slotId) => {
-    if (slotBookings.length >= capacity) {
+    if (slotBookings.length >= CONFLICT_THRESHOLD) {
       const first = slotBookings[0];
       const donorNames = slotBookings.map((b) => b.donorName).join('、');
       conflicts.push({
-        id: `cap-${slotId}`,
+        id: `dup-${slotId}`,
         bookingId: first.id,
         donorName: first.donorName,
         stationId: first.stationId,
@@ -72,7 +72,7 @@ export const detectBookingConflicts = (
         startTime: first.startTime,
         endTime: first.endTime,
         conflictType: 'CapacityExceeded',
-        description: `该时段共${slotBookings.length}人预约，超出容量${capacity}人（涉及：${donorNames}）`,
+        description: `该时段重复占用：共${slotBookings.length}人预约（${donorNames}），同一时段仅允许1人`,
         resolved: false,
         affectedBookings: slotBookings.map((b) => b.id),
       });

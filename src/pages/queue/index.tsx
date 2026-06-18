@@ -26,7 +26,7 @@ const QueuePage: React.FC = () => {
   } = useQueueStore();
 
   const { stations } = useBookingStore();
-  const { donors, getCurrentDonor } = useDonorStore();
+  const { getCurrentDonor } = useDonorStore();
 
   const [showTakeNumber, setShowTakeNumber] = useState(false);
   const [selectedPriority, setSelectedPriority] = useState<DonorPriority>('Normal');

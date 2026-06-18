@@ -17,7 +17,6 @@ const SchedulePage: React.FC = () => {
     setDate,
     selectStation,
     getSlotsByStation,
-    getBookingsByStation,
     createBooking,
     cancelBooking,
     bookings,

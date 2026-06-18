@@ -35,7 +35,7 @@ export const mockStations: CollectionStation[] = [
   },
 ];
 
-export const SLOT_CAPACITY = 5;
+export const SLOT_CAPACITY = 1;
 
 export const TIME_PERIODS = [
   { start: '08:00', end: '08:30' },
@@ -74,6 +74,8 @@ export const generateEmptyTimeSlots = (date: string): TimeSlot[] => {
 const today = new Date().toISOString().split('T')[0];
 const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
+const mkSlot = (stationId: string, d: string, idx: number) => `${stationId}-${d}-${idx}`;
+
 export const mockBookings: Booking[] = [
   {
     id: 'b001',
@@ -81,7 +83,7 @@ export const mockBookings: Booking[] = [
     donorName: '张伟',
     stationId: 's001',
     stationName: '流动采血车1号',
-    slotId: 's001-2026-06-18-2',
+    slotId: mkSlot('s001', today, 2),
     date: today,
     startTime: '09:00',
     endTime: '09:30',
@@ -96,7 +98,7 @@ export const mockBookings: Booking[] = [
     donorName: '李娜',
     stationId: 's001',
     stationName: '流动采血车1号',
-    slotId: 's001-2026-06-18-2',
+    slotId: mkSlot('s001', today, 2),
     date: today,
     startTime: '09:00',
     endTime: '09:30',
@@ -111,7 +113,7 @@ export const mockBookings: Booking[] = [
     donorName: '王强',
     stationId: 's003',
     stationName: '市中心血站',
-    slotId: 's003-2026-06-18-5',
+    slotId: mkSlot('s003', today, 5),
     date: today,
     startTime: '10:30',
     endTime: '11:00',
@@ -126,7 +128,7 @@ export const mockBookings: Booking[] = [
     donorName: '赵敏',
     stationId: 's002',
     stationName: '流动采血车2号',
-    slotId: 's002-2026-06-18-1',
+    slotId: mkSlot('s002', today, 1),
     date: today,
     startTime: '08:30',
     endTime: '09:00',
@@ -141,7 +143,7 @@ export const mockBookings: Booking[] = [
     donorName: '刘洋',
     stationId: 's004',
     stationName: '大学城采血点',
-    slotId: 's004-2026-06-18-8',
+    slotId: mkSlot('s004', today, 8),
     date: today,
     startTime: '14:30',
     endTime: '15:00',
@@ -156,7 +158,7 @@ export const mockBookings: Booking[] = [
     donorName: '张伟',
     stationId: 's001',
     stationName: '流动采血车1号',
-    slotId: `s001-${tomorrow}-3`,
+    slotId: mkSlot('s001', tomorrow, 3),
     date: tomorrow,
     startTime: '09:30',
     endTime: '10:00',
@@ -171,7 +173,7 @@ export const mockBookings: Booking[] = [
     donorName: '陈静',
     stationId: 's001',
     stationName: '流动采血车1号',
-    slotId: 's001-2026-06-18-2',
+    slotId: mkSlot('s001', today, 2),
     date: today,
     startTime: '09:00',
     endTime: '09:30',
@@ -186,7 +188,7 @@ export const mockBookings: Booking[] = [
     donorName: '杨帆',
     stationId: 's001',
     stationName: '流动采血车1号',
-    slotId: 's001-2026-06-18-2',
+    slotId: mkSlot('s001', today, 2),
     date: today,
     startTime: '09:00',
     endTime: '09:30',
@@ -201,7 +203,7 @@ export const mockBookings: Booking[] = [
     donorName: '黄磊',
     stationId: 's001',
     stationName: '流动采血车1号',
-    slotId: 's001-2026-06-18-2',
+    slotId: mkSlot('s001', today, 2),
     date: today,
     startTime: '09:00',
     endTime: '09:30',
@@ -216,7 +218,7 @@ export const mockBookings: Booking[] = [
     donorName: '周婷',
     stationId: 's001',
     stationName: '流动采血车1号',
-    slotId: 's001-2026-06-18-3',
+    slotId: mkSlot('s001', today, 3),
     date: today,
     startTime: '09:30',
     endTime: '10:00',
